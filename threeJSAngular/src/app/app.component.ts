@@ -10,6 +10,25 @@ interface Coords {
   height: number;
 }
 
+interface IGraph {
+  title: string;
+  yellowTitle: string;
+  input: string;
+  output: string;
+  pipelineId: string;
+  versionId: string;
+  quantityInst: string;
+  children: Array<IChildGraph>;
+}
+
+interface IChildGraph {
+  title: string;
+  input: string;
+  output: string;
+  request: number;
+  response: number;
+}
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
@@ -35,36 +54,73 @@ export class AppComponent implements OnInit {
     this.cnv.height = window.innerHeight;
     this.cnv.width = window.innerWidth;
 
-    this.drawGraph(this.ctx, 'TestService', 'RemoteService', 0 , 0, 1);
+    const childOne: IChildGraph = {
+      title: 'PointService',
+      input: '23,531',
+      output: '14,708',
+      request: 85,
+      response: 24
+    };
+
+    const childTwo: IChildGraph = {
+      title: 'SomeService',
+      input: '3,531',
+      output: '64,700',
+      request: 16,
+      response: 77
+    };
+
+    const childThree: IChildGraph = {
+      title: 'ExtService',
+      input: '531',
+      output: '14,721',
+      request: 97,
+      response: 81
+    };
+
+    const graph: IGraph = {
+      title: 'EadService',
+      input: '127,365',
+      output: '287,626',
+      pipelineId: '5',
+      quantityInst: '1',
+      versionId: '127',
+      yellowTitle: 'pl2',
+      children: [
+        childOne,
+        childTwo,
+        childThree
+      ]
+    };
+
+    this.drawGraph(this.ctx, graph, 0 , 0);
   }
 
   private async drawGraph(
     ctx: CanvasRenderingContext2D,
-    mainTitle: string = 'NaN',
-    subTitle: string = 'NaN',
+    graph: IGraph,
     posX: number = 0,
-    posY: number = 0,
-    subRects: number = 0
+    posY: number = 0
     ) {
     const subRectWidth = 450;
-    const addWidth = 30 * (subRects - 1);
-    const widthMain = (150 + (subRectWidth * subRects)) + addWidth;
+    const addWidth = 30 * (graph.children.length - 1);
+    const widthMain = (150 + (subRectWidth * graph.children.length)) + addWidth;
 
-    const mainRectCoords = await this.drawMainRect(ctx, mainTitle, posX, posY, widthMain);
+    const mainRectCoords = await this.drawMainRect(ctx, posX, posY, widthMain, graph);
 
-    let leftX = mainRectCoords.leftX;
-    for (let i = 0; i < subRects; i++) {
-      this.drawSubRectangle(ctx, subTitle, mainRectCoords.leftX + leftX);
+    let leftX = 0;
+    graph.children.forEach(child => {
+      this.drawSubRectangle(ctx, mainRectCoords.leftX + leftX, mainRectCoords.upperY, child);
       leftX += 480;
-    }
+    });
   }
 
   private async drawMainRect(
     ctx: CanvasRenderingContext2D,
-    mainTitle: string = 'NaN',
     posX: number = 0,
     posY: number = 0,
     graphWidth: number = 600,
+    graph: IGraph
   ): Promise<Coords> {
     const graphHeight = 350;
     const font = 'Arial';
@@ -76,16 +132,16 @@ export class AppComponent implements OnInit {
     const mainTitleRectCoords = this.drawRect(ctx, mainRectCoords.leftX, posY, mainRectCoords.width, graphHeight - 300, 'rgba(255,41,41,0.91)');
     const greyRectCoords = this.drawRect(ctx, mainRectCoords.leftX, posY + 300, mainRectCoords.width, graphHeight - 300, 'rgba(13,13,13,0.1)');
     const mainArrDCoords = await this.insertImage(ctx, 'assets/img/arr_down.png', mainTitleRectCoords.leftX + 10, posY + 13, 0.13, 0.13);
-    const mainArrDTxtCoords = this.typeText('25px ' + font, 'rgb(255,255,255)', 'left', '2,231,908', mainArrDCoords.rightX + 5, posY + 33);
-    const mainTxtCoords = this.typeText('25px ' + font, 'rgb(255,255,255)', 'center', mainTitle, posX + mainRectCoords.width / 2, posY + 33);
+    const mainArrDTxtCoords = this.typeText('25px ' + font, 'rgb(255,255,255)', 'left', graph.input, mainArrDCoords.rightX + 5, posY + 33);
+    const mainTxtCoords = this.typeText('25px ' + font, 'rgb(255,255,255)', 'center', graph.title, posX + mainRectCoords.width / 2, posY + 33);
     const mainIconCoords = await this.insertImage(ctx, 'assets/img/rem_black.png', mainTxtCoords.leftX - 35, posY + 9, 0.06, 0.06);
     const yellowRectCoords = this.drawRect(ctx,  mainTxtCoords.rightX + 5, posY + 10, 50, 30, 'rgba(238,218,44,0.7)', 10, 10, 10, 10);
-    const yellowTxtCoords = this.typeText('20px ' + font, 'rgb(0,0,0)', 'left', 'zh2', yellowRectCoords.leftX + 10, posY + 33);
+    const yellowTxtCoords = this.typeText('20px ' + font, 'rgb(0,0,0)', 'left', graph.yellowTitle, yellowRectCoords.leftX + 10, posY + 33);
     const mainArrUCoords = await this.insertImage(ctx, 'assets/img/arr_up.png', mainRectCoords.rightX - 155, posY + 13, 0.13, 0.13);
-    const mainArrUTxtCoords = this.typeText('25px ' + font, 'rgb(255,255,255)', 'left', '1,023,783', mainArrUCoords.rightX + 5, posY + 33);
-    const pipelineTxtCoords = this.typeText('20px ' + font, 'rgb(0,0,0)', 'left', 'Pipeline Id: 120', mainRectCoords.leftX + 10, posY + 330);
-    const verTxtCoords = this.typeText('20px ' + font, 'rgb(0,0,0)', 'left', 'Version Id: 5', pipelineTxtCoords.rightX + 30, posY + 330);
-    const instTxtCoords = this.typeText('20px ' + font, 'rgb(0,0,0)', 'left', 'Instances: 12,234', mainRectCoords.rightX - 190, posY + 330);
+    const mainArrUTxtCoords = this.typeText('25px ' + font, 'rgb(255,255,255)', 'left', graph.output, mainArrUCoords.rightX + 5, posY + 33);
+    const pipelineTxtCoords = this.typeText('20px ' + font, 'rgb(0,0,0)', 'left', 'Pipeline Id: ' + graph.pipelineId, mainRectCoords.leftX + 10, posY + 330);
+    const verTxtCoords = this.typeText('20px ' + font, 'rgb(0,0,0)', 'left', 'Version Id: ' + graph.versionId, pipelineTxtCoords.rightX + 30, posY + 330);
+    const instTxtCoords = this.typeText('20px ' + font, 'rgb(0,0,0)', 'left', 'Instances: ' + graph.quantityInst, mainRectCoords.rightX - 190, posY + 330);
 
     return new Promise<Coords>(resolve => {
       resolve( {
@@ -100,39 +156,61 @@ export class AppComponent implements OnInit {
   }
 
   private async drawSubRectangle(ctx: CanvasRenderingContext2D,
-                                 subTitle: string = 'NaN',
                                  posX: number = 0,
-                                 posY: number = 0) {
+                                 posY: number = 0,
+                                 graph: IChildGraph) {
+    const heightUpperSubRect = 180;
+    const heightLowerSubRect = 50;
+    const widthSubRect = 450;
+    const positionXSubRect = posX + 75;
+    const positionYSubRect = posY + 60;
+
     const font = 'Arial';
     ctx.strokeStyle = 'black';
     ctx.lineWidth = 0.5;
 
-    const upperSubRectCoords = this.drawRect(ctx, posX + 75, posY + 60, 450, 180, null, 10, 10, 0, 0);
-    const lowerSubRectCoords = this.drawRect(ctx, upperSubRectCoords.leftX, upperSubRectCoords.lowerY, 450, 50, 'rgba(28,168,51,0.81)');
+    const upperSubRectCoords = this.drawRect(ctx, positionXSubRect, positionYSubRect, widthSubRect, heightUpperSubRect, null, 10, 10, 0, 0);
+    const lowerSubRectCoords = this.drawRect(ctx, upperSubRectCoords.leftX, upperSubRectCoords.lowerY, widthSubRect, heightLowerSubRect, 'rgba(28,168,51,0.81)');
     const subArrowDCoords = await this.insertImage(ctx, 'assets/img/arr_down.png', lowerSubRectCoords.leftX + 10, lowerSubRectCoords.upperY + 15, 0.1, 0.1);
-    const subArrDTxtCoords = this.typeText('22px ' + font, 'rgb(255,255,255)', 'left', '12,441', subArrowDCoords.rightX + 2, subArrowDCoords.upperY + 16);
-    const subTxtCoords = this.typeText('20px ' + font, 'rgb(255,255,255)', 'center', subTitle, lowerSubRectCoords.leftX + (lowerSubRectCoords.width / 2), lowerSubRectCoords.upperY + 31);
+    const subArrDTxtCoords = this.typeText('22px ' + font, 'rgb(255,255,255)', 'left', graph.input, subArrowDCoords.rightX + 2, subArrowDCoords.upperY + 16);
+    const subTxtCoords = this.typeText('20px ' + font, 'rgb(255,255,255)', 'center', graph.title, lowerSubRectCoords.leftX + (lowerSubRectCoords.width / 2), lowerSubRectCoords.upperY + 31);
     const subIconCoords = await this.insertImage(ctx, 'assets/img/check_mark.png', subTxtCoords.leftX - 30, lowerSubRectCoords.upperY + 12, 0.04, 0.04);
     const arrSubUCoords = await this.insertImage(ctx, 'assets/img/arr_up.png', lowerSubRectCoords.rightX - 130, lowerSubRectCoords.upperY + 15, 0.1, 0.1);
-    const subArrUTxtCoords = this.typeText('20px ' + font, 'rgb(255,255,255)', 'left', '1,222,710', arrSubUCoords.rightX + 2, arrSubUCoords.upperY + 16);
-    const reqRectCoords = this.drawRect(ctx, lowerSubRectCoords.leftX + lowerSubRectCoords.width / 2 - 120, lowerSubRectCoords.upperY - 130, 70, 110, 'rgba(11,126,12,0.7)', 10, 10, 10, 10);
+    const subArrUTxtCoords = this.typeText('20px ' + font, 'rgb(255,255,255)', 'left', graph.output, arrSubUCoords.rightX + 2, arrSubUCoords.upperY + 16);
+    const reqRectCoords = this.drawProgressBar(ctx, lowerSubRectCoords.leftX + lowerSubRectCoords.width / 2 - 120, lowerSubRectCoords.upperY - 130, 70, 110, graph.request);
     const reqTxtCoords = this.typeText('20px ' + font, 'rgb(0,0,0)', 'center', 'Request', reqRectCoords.leftX + reqRectCoords.width / 2, reqRectCoords.upperY - 10);
-    const respRectCoords = this.drawRect(ctx, lowerSubRectCoords.leftX + lowerSubRectCoords.width / 2 + 50, posY + 110, 70, 110, 'rgba(11,126,12,0.7)', 10, 10, 10, 10);
+    const respRectCoords = this.drawProgressBar(ctx, lowerSubRectCoords.leftX + lowerSubRectCoords.width / 2 + 50, posY + 110, 70, 110, graph.response);
     const respTxtCoords = this.typeText('20px ' + font, 'rgb(0,0,0)', 'center', 'Response', respRectCoords.leftX + respRectCoords.width / 2, respRectCoords.upperY - 10);
+
+    return new Promise<Coords>(resolve => {
+      resolve( {
+        upperY: positionYSubRect,
+        lowerY: upperSubRectCoords.leftX + heightLowerSubRect,
+        height: heightUpperSubRect + heightLowerSubRect,
+        leftX: positionXSubRect,
+        rightX: upperSubRectCoords.leftX + widthSubRect,
+        width: widthSubRect
+      });
+    });
   }
 
-  private drawProgressBar(ctx: CanvasRenderingContext2D, value: number) {
-    // let width = parseInt($('#width').val());
-    // let height = parseInt($('#height').val());
-    // let max = parseInt($('#max').val());
-    // let val = Math.min(Math.max(parseInt(parseInt($('#val').val())), 0), max);
-    // let  direction = $('input[name="direction"]:checked').val();
+  private drawProgressBar(ctx: CanvasRenderingContext2D, posX, posY, barWidth, barHeight, value): Coords {
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 1;
+    const bgrBarCoords = this.drawRect(ctx, posX, posY, barWidth, barHeight, 'rgba(11,126,12,0.7)', 0, 0, 10, 10);
+    const fillVal = barHeight - (barHeight * value / 100);
+    ctx.lineWidth = 0;
+    const filledBarCoords = this.drawRect(ctx, posX, posY, barWidth, fillVal, 'rgba(255,255,255,1)', 5, 5, 0, 0);
+    ctx.lineWidth = 0.5;
 
-    // Draw the background
-    ctx.fillStyle = 'rgba(11,126,12,0.7)';
-    const fillVal = Math.min(Math.max(value / 100, 0), 1);
-    // ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillRect(0, 0, 40, fillVal * 100);
+    return {
+      upperY: posY,
+      height: barHeight,
+      lowerY: posY + barHeight,
+      leftX: posX,
+      width: barWidth,
+      rightX: posX + barWidth
+    };
   }
 
   private async insertImage(ctx: CanvasRenderingContext2D, path: string,
