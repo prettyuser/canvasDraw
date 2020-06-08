@@ -1,0 +1,33 @@
+.arrowup {
+  fill: white;
+  transform: scale(0.03) translate(2390%, 310%);
+}
+.arrowup1 {
+  fill: white;
+  transform: scale(0.03) translate(2140%, 2060%);
+}
+.arrowdown {
+  fill: white;
+  transform: scale(0.03) translate(590%, 2080%);
+}
+.arrowdown1 {
+  fill: white;
+  transform: scale(0.03) translate(510%, 320%);
+}
+.checkmark {
+  fill: white;
+  transform: scale(1.1) translate(28%, 56%);
+}
+.cross {
+  fill: white;
+  transform: scale(0.04) translate(790%, 230%);
+}
+
+#progressBar{
+  width: 80%;
+  height: 30px;
+  border: 5px solid #4444;
+  border-radius: 5px;
+}
+
+.canvas { border-style: solid }
